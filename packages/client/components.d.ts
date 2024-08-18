@@ -7,6 +7,8 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     AuditResult: typeof import('./components/Audit/AuditResult.vue')['default']
     AuditResultItemsLength: typeof import('./components/Audit/AuditResultItemsLength.vue')['default']
+    AxeResultCat: typeof import('./components/Results/AxeResultCat.vue')['default']
+    AxeResults: typeof import('./components/Results/AxeResults.vue')['default']
     Badge: typeof import('./components/Badge.vue')['default']
     BtnAction: typeof import('./components/Btn/BtnAction.vue')['default']
     BtnBasic: typeof import('./components/Btn/BtnBasic.vue')['default']
