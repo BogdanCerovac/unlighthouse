@@ -23,25 +23,7 @@ const reportsScore = computed(() => {
         <div class="grid grid-cols-12 gap-4 text-xs w-full">
           <div class="flex items-center justify-between col-span-4 lg:col-span-3 xl:col-span-2">
             <span>{{ routeName }}</span>
-            <span>Test</span>
-            <div class="axe">
-              <p>reports.length: {{reports.length}}</p>
-
-              <ul>
-                <li  v-for="(report, index) in reports" :key="index">
-                  {{index}}
-                </li>
-              </ul>
-
-              <div style="display:none;">
-                {{JSON.stringify(reports)}}
-              </div>
-
-              <div style="display:none;">
-                {{JSON.stringify(reports[0])}}
-              </div>
-              <axe-results :reports="reports[0]"></axe-results>
-            </div>
+            <span># axe violations: {{ reports[0].axeResults.violations.length }}</span>
             <span v-if="dynamicSampling && reports.length >= dynamicSampling">
               <tooltip>
                 <span class="whitespace-nowrap ml-2 opacity-90">Sampled routes</span>
@@ -53,7 +35,6 @@ const reportsScore = computed(() => {
           </div>
           <div class="items-center col-span-2 hidden lg:flex">
             <metric-guage v-if="reportsScore" :score="reportsScore" :stripped="true" />
-            
           </div>
         </div>
       </template>

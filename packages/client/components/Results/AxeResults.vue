@@ -11,8 +11,8 @@ const props = defineProps<{
 
 
 <template>
-  <details open>
-    <summary>Axe results</summary>
+  <details>
+    <summary>Axe results (violations: {{ reports.axeResults.violations.length }})</summary>
 
     <details class="category">
       <summary>Violations <span>{{ reports.axeResults.violations.length }}</span></summary>

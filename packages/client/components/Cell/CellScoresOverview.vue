@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <loading-status-icon v-if="!report.report && report.tasks.inspectHtmlTask === 'failed'" :status="report.tasks.inspectHtmlTask" />
-  <loading-status-icon v-else-if="!report.report" :status="report.tasks.runLighthouseTask" />
+  <loading-status-icon v-else-if="!report.report" :status="report.tasks.runLighthouseTask" />  
   <btn-action
     v-else
     title="Open Lighthouse Report"
@@ -25,4 +25,13 @@ defineProps<{
       View Report
     </div>
   </btn-action>
+
+  <div class="axe">
+
+<div style="display:none;">
+  {{JSON.stringify(report)}}
+</div>
+
+<axe-results :reports="report"></axe-results>
+</div>
 </template>
