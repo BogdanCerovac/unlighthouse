@@ -88,6 +88,7 @@ export const runLighthouseTask: PuppeteerTask = async (props) => {
   const logger = useLogger()
   const { resolvedConfig, runtimeSettings, worker } = useUnlighthouse()
   const { page, data: routeReport } = props
+  console.log("run lighthouse task bc")
 
   // if the report doesn't exist, we're going to run a new lighthouse process to generate it
   const reportJsonPath = join(routeReport.artifactPath, ReportArtifacts.reportJson)

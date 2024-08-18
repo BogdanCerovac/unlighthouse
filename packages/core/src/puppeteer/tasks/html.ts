@@ -100,6 +100,9 @@ export const inspectHtmlTask: PuppeteerTask = async (props) => {
   const { page, data: routeReport } = props
   const logger = useLogger()
   let html: string
+  let axeResults: any;
+
+  console.log("inspectHTML BC")
 
   const start = new Date()
   // basic caching based on saving html payloads
@@ -138,6 +141,43 @@ export const inspectHtmlTask: PuppeteerTask = async (props) => {
 
     html = response.payload
   }
+
+
+  // Bogdan
+
+const axeVersion = "4.8.2";
+function delayFor(time) {
+    return new Promise(function(resolve) { 
+        setTimeout(resolve, time)
+    });
+}
+console.log("Axe for: ", page.url())
+const results = await Promise.race([
+  page.evaluate(`
+  ( async () => {
+  var url = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/${axeVersion}/axe.min.js";
+  var script = document.createElement("script");
+  script.setAttribute("src", url);
+  document.head.appendChild(script);
+  const result = new Promise(resolve =>
+      script.onload = () => {
+      //console.log("axe is loaded.");
+      axe.run(document, {iframes:false}).then(results => resolve(results));
+      }        
+  );
+  return (await result);
+  })();
+`),
+delayFor(10000)
+]);
+
+if(results?.violations){
+  console.log("Violations from CDN AXE:" + results.violations.length);
+  logger.info(`Violations from CDN AXE: ${results.violations.length}`);
+  console.log(results.violations)
+}
+
+axeResults = results;
 
   const $ = cheerio.load(html)
   routeReport.seo = processSeoMeta($)
@@ -188,5 +228,7 @@ export const inspectHtmlTask: PuppeteerTask = async (props) => {
   // only need the html payload for caching purposes, unlike the lighthouse reports
   if (resolvedConfig.cache)
     fs.writeFileSync(htmlPayloadPath, html)
+
+  routeReport.axeResults = axeResults;
   return routeReport
 }
