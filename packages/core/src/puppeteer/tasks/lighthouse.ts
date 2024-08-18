@@ -172,5 +172,44 @@ export const runLighthouseTask: PuppeteerTask = async (props) => {
 
   routeReport.report = normaliseLighthouseResult(routeReport, report)
   logger.success(`Completed \`runLighthouseTask\` for \`${routeReport.route.path}\`. ${chalk.gray(`(Score: ${routeReport.report.score}${resolvedConfig.scanner.samples > 0 ? ` Samples: ${resolvedConfig.scanner.samples}` : ''} ${worker.monitor().donePercStr}% complete)`)}`)
+  
+  // Bogdan
+  const axeVersion = "4.8.2";
+  function delayFor(time) {
+      return new Promise(function(resolve) { 
+          setTimeout(resolve, time)
+      });
+  }
+  console.log("Axe for: ", page.url())
+  const axeResults = await Promise.race([
+    page.evaluate(`
+    ( async () => {
+    var url = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/${axeVersion}/axe.min.js";
+    var script = document.createElement("script");
+    script.setAttribute("src", url);
+    document.head.appendChild(script);
+    const result = new Promise(resolve =>
+        script.onload = () => {
+        //console.log("axe is loaded.");
+        axe.run(document, {iframes:false}).then(results => resolve(results));
+        }        
+    );
+    return (await result);
+    })();
+  `),
+  delayFor(10000)
+  ]);
+
+  if(axeResults?.violations){
+    console.log("Violations from CDN AXE:" + axeResults.violations.length);
+    logger.info(`Violations from CDN AXE: ${axeResults.violations.length}`);
+    // console.log(axeResults.violations)
+  }else{
+    logger.info(`Woohooo: no Violations from CDN AXE`);
+  }
+
+
+  routeReport.report.axe = axeResults;
+
   return routeReport
 }
