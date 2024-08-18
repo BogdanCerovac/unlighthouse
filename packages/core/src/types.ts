@@ -118,6 +118,8 @@ export interface UnlighthouseRouteReport {
    * The SEO meta-data, only set once the html payload has been extracted and passed.
    */
   seo?: HTMLExtractPayload
+
+  axeResults?: any
 }
 
 export interface HTMLExtractPayload {
