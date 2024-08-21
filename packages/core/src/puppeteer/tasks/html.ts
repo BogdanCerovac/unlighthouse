@@ -12,6 +12,8 @@ import { ReportArtifacts, fetchUrlRaw, formatBytes, trimSlashes } from '../../ut
 import { normaliseRoute } from '../../router'
 import { setupPage } from '../util'
 
+let allAxes = [];
+
 export const extractHtmlPayload: (page: Page, route: string) => Promise<{ success: boolean; redirected?: false | string; message?: string; payload?: string }> = async (page, route) => {
   const { worker, resolvedConfig } = useUnlighthouse()
 
@@ -102,7 +104,7 @@ export const inspectHtmlTask: PuppeteerTask = async (props) => {
   let html: string
   let axeResults: any;
 
-  console.log("inspectHTML BC")
+  console.log("inspectHTML BC " + page.url())
 
   const start = new Date()
   // basic caching based on saving html payloads
@@ -151,7 +153,8 @@ function delayFor(time) {
         setTimeout(resolve, time)
     });
 }
-console.log("Axe for: ", page.url())
+const puppUrl = page.url();
+console.log("Axe for: ", puppUrl)
 const results = await Promise.race([
   page.evaluate(`
   ( async () => {
@@ -172,9 +175,13 @@ delayFor(10000)
 ]);
 
 if(results?.violations){
+  console.log("Violations on page:" + puppUrl);
   console.log("Violations from CDN AXE:" + results.violations.length);
   logger.info(`Violations from CDN AXE: ${results.violations.length}`);
   console.log(results.violations)
+  allAxes.push({url : puppUrl, results});
+
+  fs.writeFileSync('../../axes/' + new Date().getTime() + ".json", JSON.stringify({puppUrl, results}))
 }
 
 axeResults = results;
