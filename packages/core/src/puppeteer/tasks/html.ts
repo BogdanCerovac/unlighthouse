@@ -189,7 +189,7 @@ export const inspectHtmlTask: PuppeteerTask = async (props) => {
 
 
   // Bogdan
-/*
+
 const axeVersion = "4.8.2";
 function delayFor(time: Number) {
     return new Promise(function(resolve) { 
@@ -223,9 +223,10 @@ if(results?.violations){
   logger.info(`Violations from CDN AXE: ${results.violations.length}`);
   console.log(results.violations)
   //allAxes.push({url : puppUrl, results});
+  axeResults = results;
 
   //fs.writeFileSync('../../axes/' + new Date().getTime() + ".json", JSON.stringify({puppUrl, results}))
-}*/
+}
 
 
   const $ = cheerio.load(html)
