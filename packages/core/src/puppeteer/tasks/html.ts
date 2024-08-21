@@ -12,13 +12,15 @@ import { ReportArtifacts, fetchUrlRaw, formatBytes, trimSlashes } from '../../ut
 import { normaliseRoute } from '../../router'
 import { setupPage } from '../util'
 
-let allAxes = [];
-
-export const extractHtmlPayload: (page: Page, route: string) => Promise<{ success: boolean; redirected?: false | string; message?: string; payload?: string }> = async (page, route) => {
+export const extractHtmlPayload: (page: Page, route: string) => Promise<{ success: boolean; redirected?: false | string; message?: string; payload?: string, axeResults:any }> = async (page, route) => {
   const { worker, resolvedConfig } = useUnlighthouse()
 
+  const logger = useLogger();
+
+  let axeResults = false;
+
   // if we don't need to execute any javascript we can do a less expensive fetch of the URL
-  if (resolvedConfig.scanner.skipJavascript) {
+  if (false === true && resolvedConfig.scanner.skipJavascript) {
     const { valid, response, redirected, redirectUrl } = await fetchUrlRaw(route, resolvedConfig)
     if (!valid || !response)
       return { success: false, message: `Invalid response from URL ${route} code: ${response?.status || '404'}.` }
@@ -47,8 +49,44 @@ export const extractHtmlPayload: (page: Page, route: string) => Promise<{ succes
     await setupPage(page)
 
     const pageVisit = await page.goto(route, { waitUntil: resolvedConfig.scanner.skipJavascript ? 'domcontentloaded' : 'networkidle0' })
+    console.log("____pageVisit:", page.url())
     if (!pageVisit)
       return { success: false, message: `Failed to go to route ${route}.` }
+
+     // Bogdan
+    console.log("--------------Bogdan")
+    const axeVersion = "4.8.2";
+
+    const puppUrl = page.url();
+    console.log("-----Axe for: ", puppUrl)
+    const results = await page.evaluate(`
+      ( async () => {
+      var url = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/${axeVersion}/axe.min.js";
+      var script = document.createElement("script");
+      script.setAttribute("src", url);
+      document.head.appendChild(script);
+      const result = new Promise(resolve =>
+          script.onload = () => {
+          //console.log("axe is loaded.");
+          axe.run(document, {iframes:false}).then(results => resolve(results));
+          }        
+      );
+      return (await result);
+      })();
+    `)
+
+    if(results?.violations){
+      console.log("---------------Violations on page:" + puppUrl);
+      console.log("Violations from CDN AXE:" + results.violations.length);
+      logger.info(`Violations from CDN AXE: ${results.violations.length}`);
+      console.log(results.violations)
+      axeResults = results;
+
+      fs.writeFileSync('../../axes/' + new Date().getTime() + ".json", JSON.stringify({puppUrl, results}))
+    }else{
+      logger.info(`NO Violations from CDN AXE: ${puppUrl}`);
+      console.log("-----------NO Violations on page:" + puppUrl);
+    }
 
     // only 2xx we'll consider valid
     const { 'content-type': contentType, location } = pageVisit.headers()
@@ -76,6 +114,7 @@ export const extractHtmlPayload: (page: Page, route: string) => Promise<{ succes
     return {
       success: true,
       payload,
+      axeResults
     }
   }
   catch (e) {
@@ -104,19 +143,23 @@ export const inspectHtmlTask: PuppeteerTask = async (props) => {
   let html: string
   let axeResults: any;
 
-  console.log("inspectHTML BC " + page.url())
+  // console.log("inspectHTML BC " + page.url())
+  // console.log("-----inspectHTML BC ")
+  // console.log(page)
 
   const start = new Date()
   // basic caching based on saving html payloads
   const htmlPayloadPath = join(routeReport.artifactPath, ReportArtifacts.html)
   let cached = false
-  if (resolvedConfig.cache && fs.existsSync(htmlPayloadPath)) {
+  if (false && resolvedConfig.cache && fs.existsSync(htmlPayloadPath)) {
     html = fs.readFileSync(htmlPayloadPath, { encoding: 'utf-8' })
     logger.debug(`Running \`inspectHtmlTask\` for \`${routeReport.route.path}\` using cache.`)
     cached = true
   }
   else {
     const response = await extractHtmlPayload(page, routeReport.route.url)
+    console.log("---inspectHtmlTask--")
+    console.log("response", response.axeResults)
     logger.debug(`HTML extract of \`${routeReport.route.url}\` response ${response.success ? 'succeeded' : 'failed'}.`)
 
     if (!response.success || !response.payload) {
@@ -146,9 +189,9 @@ export const inspectHtmlTask: PuppeteerTask = async (props) => {
 
 
   // Bogdan
-
+/*
 const axeVersion = "4.8.2";
-function delayFor(time) {
+function delayFor(time: Number) {
     return new Promise(function(resolve) { 
         setTimeout(resolve, time)
     });
@@ -179,12 +222,11 @@ if(results?.violations){
   console.log("Violations from CDN AXE:" + results.violations.length);
   logger.info(`Violations from CDN AXE: ${results.violations.length}`);
   console.log(results.violations)
-  allAxes.push({url : puppUrl, results});
+  //allAxes.push({url : puppUrl, results});
 
-  fs.writeFileSync('../../axes/' + new Date().getTime() + ".json", JSON.stringify({puppUrl, results}))
-}
+  //fs.writeFileSync('../../axes/' + new Date().getTime() + ".json", JSON.stringify({puppUrl, results}))
+}*/
 
-axeResults = results;
 
   const $ = cheerio.load(html)
   routeReport.seo = processSeoMeta($)

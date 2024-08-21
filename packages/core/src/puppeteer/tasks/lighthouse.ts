@@ -15,6 +15,8 @@ import { setupPage } from '../util'
 export function normaliseLighthouseResult(route: UnlighthouseRouteReport, result: LH.Result): LighthouseReport {
   const { resolvedConfig, runtimeSettings } = useUnlighthouse()
 
+  // console.log("normaliseLighthouseResult:" , route)
+
   const measuredCategories = Object.values(result.categories)
     .filter(c => typeof c.score !== 'undefined') as { score: number }[]
 
@@ -88,7 +90,7 @@ export const runLighthouseTask: PuppeteerTask = async (props) => {
   const logger = useLogger()
   const { resolvedConfig, runtimeSettings, worker } = useUnlighthouse()
   const { page, data: routeReport } = props
-  console.log("run lighthouse task bc")
+  console.log("run lighthouse task bc, " + page.url())
 
   // if the report doesn't exist, we're going to run a new lighthouse process to generate it
   const reportJsonPath = join(routeReport.artifactPath, ReportArtifacts.reportJson)

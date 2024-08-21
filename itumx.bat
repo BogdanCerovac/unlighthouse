@@ -1,0 +1,1 @@
+rmdir /s  .unlighthouse & npm run cli:itumx
